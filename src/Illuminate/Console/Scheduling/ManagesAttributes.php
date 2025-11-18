@@ -136,6 +136,16 @@ trait ManagesAttributes
     }
 
     /**
+     * State that the command should run even in maintenance mode.
+     *
+     * @return $this
+     */
+    public function runInMaintenanceMode()
+    {
+        return $this->evenInMaintenanceMode();
+    }
+
+    /**
      * Do not allow the event to overlap each other.
      * The expiration time of the underlying cache lock may be specified in minutes.
      *
