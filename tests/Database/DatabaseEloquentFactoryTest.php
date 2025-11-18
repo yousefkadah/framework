@@ -995,9 +995,33 @@ class DatabaseEloquentFactoryTest extends TestCase
             ->insert();
         $this->assertCount(5, $posts = FactoryTestPost::query()->where('title', 'hello')->get());
         $this->assertEquals(strtoupper($posts[0]->user->name), $posts[0]->upper_case_name);
-        $this->assertEquals(2, ($users = FactoryTestUser::query()->get())->count());
-        $this->assertCount(1, $users->where('name', 'shaedrich'));
+        $this->assertEquals(
+            2,
+            ($users = FactoryTestUser::query()->get())->count()
+        );
         $this->assertCount(1, $users->where('name', 'totwell'));
+        $this->assertCount(1, $users->where('name', 'shaedrich'));
+    }
+
+    public function test_factory_can_insert_with_hidden()
+    {
+        (new FactoryTestUserFactory())->forEachSequence(['name' => Name::Taylor, 'options' => 'abc'])->insert();
+        $user = DB::table('users')->sole();
+        $this->assertEquals('abc', $user->options);
+        $userModel = FactoryTestUser::query()->sole();
+        $this->assertEquals('abc', $userModel->options);
+    }
+
+    public function test_factory_can_insert_with_array_casts()
+    {
+        (new FactoryTestUserWithArrayFactory())->count(2)->insert();
+        $users = DB::table('users')->get();
+        foreach ($users as $user) {
+            $this->assertEquals(['rtj'], json_decode($user->options, true));
+            $createdAt = Carbon::parse($user->created_at);
+            $updatedAt = Carbon::parse($user->updated_at);
+            $this->assertEquals($updatedAt, $createdAt);
+        }
     }
 
     /**
@@ -1039,6 +1063,9 @@ class FactoryTestUser extends Eloquent
     use HasFactory;
 
     protected $table = 'users';
+    protected $hidden = ['options'];
+    protected $withCount = ['posts'];
+    protected $with = ['posts'];
 
     public function posts()
     {
@@ -1217,6 +1244,29 @@ class FactoryTestUseFactoryAttributeFactory extends Factory
 class FactoryTestUseFactoryAttribute extends Eloquent
 {
     use HasFactory;
+}
+
+class FactoryTestUserWithArray extends Eloquent
+{
+    protected $table = 'users';
+
+    protected function casts()
+    {
+        return ['options' => 'array'];
+    }
+}
+
+class FactoryTestUserWithArrayFactory extends Factory
+{
+    protected $model = FactoryTestUserWithArray::class;
+
+    public function definition()
+    {
+        return [
+            'name' => 'killer mike',
+            'options' => ['rtj'],
+        ];
+    }
 }
 
 enum Name: string
