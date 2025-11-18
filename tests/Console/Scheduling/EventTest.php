@@ -104,4 +104,26 @@ class EventTest extends TestCase
 
         $this->assertSame('fancy-command-description', $event->mutexName());
     }
+
+    public function testRunInMaintenanceMode()
+    {
+        $event = new Event(m::mock(EventMutex::class), 'php -i');
+
+        $this->assertFalse($event->runsInMaintenanceMode());
+
+        $event->runInMaintenanceMode();
+
+        $this->assertTrue($event->runsInMaintenanceMode());
+    }
+
+    public function testEvenInMaintenanceMode()
+    {
+        $event = new Event(m::mock(EventMutex::class), 'php -i');
+
+        $this->assertFalse($event->runsInMaintenanceMode());
+
+        $event->evenInMaintenanceMode();
+
+        $this->assertTrue($event->runsInMaintenanceMode());
+    }
 }
